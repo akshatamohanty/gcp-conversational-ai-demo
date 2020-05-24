@@ -1,26 +1,41 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useState, useEffect } from 'react'
+import './App.css'
+
+// components & screens
+import Intro from './screens/intro/Intro'
+import Game from './screens/game/Game'
+import End from './screens/end/End'
+
+// constants
+const STAGE = Object.freeze({
+  INTRO: 'intro',
+  PLAYING: 'playing',
+  END: 'end',
+})
+
+const name = 'Katelyn'
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+  const [stage, setStage] = useState(STAGE.INTRO)
+
+  if (stage === STAGE.INTRO) {
+    return <Intro
+      name={name}
+      onStart={_ => setStage(STAGE.PLAYING)}
+      onEnd={_ => setStage(STAGE.END)}
+    />
+  }
+
+  if (stage === STAGE.PLAYING) {
+    return <Game name={name} onEnd={_ => setStage(STAGE.END)}
+    />
+  }
+
+  if (stage === STAGE.END) {
+    return <End />
+  }
+
+  return null
 }
 
-export default App;
+export default App

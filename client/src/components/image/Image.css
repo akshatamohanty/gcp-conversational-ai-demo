@@ -1,0 +1,6 @@
+.image_wrapper {
+  width: 100%;
+  min-height: 200px;
+  background-size: contain;
+  background-repeat: no-repeat;
+}
