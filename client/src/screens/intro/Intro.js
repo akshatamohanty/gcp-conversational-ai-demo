@@ -5,7 +5,7 @@ import './Intro.css'
 import SpeechSingleton from '../../Voice'
 
 const Intro = ({ name, onStart, onEnd }) => {
-  const detectYes = useCallback((transcript) => {
+  const detectResponse = useCallback((transcript) => {
     if (transcript === 'yes') {
       onStart()
     }
@@ -18,11 +18,11 @@ const Intro = ({ name, onStart, onEnd }) => {
   useEffect(() => {
     const speech = new SpeechSingleton()
     if (speech) {
-      speech.onSpeech(detectYes)
+      speech.onSpeech(detectResponse)
     } else {
       console.log('Web Speech Api not available')
     }
-  }, [detectYes])
+  }, [detectResponse])
 
   return (
     <div className="app">
