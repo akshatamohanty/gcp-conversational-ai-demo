@@ -7,5 +7,13 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Akshata Mohanty",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "socket.io": "^2.3.0",
+    "socket.io-stream": "^0.9.1",
+    "stream": "0.0.2",
+    "through2": "^3.0.1",
+    "util": "^0.12.3",
+    "uuid": "^8.1.0"
+  }
 }
