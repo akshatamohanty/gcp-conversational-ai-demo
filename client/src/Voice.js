@@ -1,5 +1,7 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import RecordRTC, { StereoAudioRecorder } from 'recordrtc'
+import io from 'socket.io-client'
+import ss from 'socket.io-stream'
 
 class SpeechSingleton {
 	_speechApiInstance = null
@@ -114,6 +116,21 @@ const useWebSpeechApi = (onSpeechResponse) => {
 }
 
 const useCloudSpeechApi = () => {
+	let socketRef = useRef()
+
+	useEffect(() => {
+		socketRef.current = io('http://localhost')
+
+    // when the server found results send
+    // it back to the client
+    socketRef.current.on('results', function (data) {
+        // show the results on the screen
+        if(data[0] && data[0].results[0] && data[0].results[0].alternatives[0]) {
+          console.log(data[0].results[0].alternatives[0].transcript)
+        }
+    })
+	}, [])
+
 	useEffect(() => {
 		let recordAudio
 
@@ -139,19 +156,19 @@ const useCloudSpeechApi = () => {
 				// continuous streaming
 				timeSlice: 2000,
 				ondataavailable: function(blob) {
-					console.log(blob)
-					// 3
 					// making use of socket.io-stream for bi-directional
 					// streaming, create a stream
-					// var stream = ss.createStream();
+					const stream = ss.createStream()
+
 					// stream directly to server
 					// it will be temp. stored locally
-					// ss(socket).emit('stream', stream, {
-					// 		name: 'stream.wav',
-					// 		size: blob.size
-					// });
+					ss(socketRef.current).emit('stream', stream, {
+							name: 'stream.wav',
+							size: blob.size
+					})
+
 					// pipe the audio blob to the read stream
-					// ss.createBlobReadStream(blob).pipe(stream);
+					ss.createBlobReadStream(blob).pipe(stream)
 			}
 			})
 
