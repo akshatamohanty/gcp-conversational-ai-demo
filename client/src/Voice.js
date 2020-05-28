@@ -119,7 +119,7 @@ const useCloudSpeechApi = () => {
 	let socketRef = useRef()
 
 	useEffect(() => {
-		socketRef.current = io('http://localhost')
+		socketRef.current = io('http://localhost:3022')
 
     // when the server found results send
     // it back to the client
@@ -155,6 +155,7 @@ const useCloudSpeechApi = () => {
 
 				// continuous streaming
 				timeSlice: 2000,
+
 				ondataavailable: function(blob) {
 					// making use of socket.io-stream for bi-directional
 					// streaming, create a stream
@@ -162,13 +163,14 @@ const useCloudSpeechApi = () => {
 
 					// stream directly to server
 					// it will be temp. stored locally
-					ss(socketRef.current).emit('stream', stream, {
+					ss(socketRef.current).emit('stream-translate', stream, {
 							name: 'stream.wav',
 							size: blob.size
 					})
 
 					// pipe the audio blob to the read stream
 					ss.createBlobReadStream(blob).pipe(stream)
+					console.log('sending stream')
 			}
 			})
 
