@@ -1,4 +1,5 @@
-import { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
+import RecordRTC, { StereoAudioRecorder } from 'recordrtc'
 
 class SpeechSingleton {
 	_speechApiInstance = null
@@ -103,71 +104,91 @@ class SpeechSingleton {
 	}
 }
 
-const useSpeech = (onSpeechResponse) => {
+const useWebSpeechApi = (onSpeechResponse) => {
 	useEffect(() => {
 		const speech = new SpeechSingleton(onSpeechResponse)
-		console.log(speech)
 		return () => {
-			console.log('im off')
 			speech.reset()
 		}
   }, [onSpeechResponse])
 }
 
+const useCloudSpeechApi = () => {
+	useEffect(() => {
+		let recordAudio
 
-export default SpeechSingleton
+		function onStream(stream) {
+			recordAudio = RecordRTC(stream, {
+				type: 'audio',
 
-export { useSpeech }
+				mimeType: 'audio/webm',
+				sampleRate: 44100,
 
-// var voice = undefined;
-// var voices = undefined;
+				// used by StereoAudioRecorder
+				// the range 22050 to 96000.
+				// let us force 16khz recording:
+				desiredSampRate: 16000,
 
-// function getVoices() {
-//   if (typeof speechSynthesis === 'undefined') {
-//       return;
-//   }
-//   voices = speechSynthesis.getVoices();
-//   if(voices.length > 0) {
-//       selectVoice('Google UK English Female');
-//   }
-// }
+				// MediaStreamRecorder, StereoAudioRecorder, WebAssemblyRecorder
+				// CanvasRecorder, GifRecorder, WhammyRecorder
+				recorderType: StereoAudioRecorder,
 
-// function selectVoice(name) {
-//   for (let i = 0; i < voices.length; i++) {
-//       if (voices[i].name === name) {
-//           voice = voices[i];
-//       }
-//   }
-// }
+				// Dialogflow / STT requires mono audio
+				numberOfAudioChannels: 1,
 
-// getVoices();
-// if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
-//     speechSynthesis.onvoiceschanged = getVoices;
-// }
+				// continuous streaming
+				timeSlice: 2000,
+				ondataavailable: function(blob) {
+					console.log(blob)
+					// 3
+					// making use of socket.io-stream for bi-directional
+					// streaming, create a stream
+					// var stream = ss.createStream();
+					// stream directly to server
+					// it will be temp. stored locally
+					// ss(socket).emit('stream', stream, {
+					// 		name: 'stream.wav',
+					// 		size: blob.size
+					// });
+					// pipe the audio blob to the read stream
+					// ss.createBlobReadStream(blob).pipe(stream);
+			}
+			})
 
-// const SpeechInit = (speechRecognizer) => {
+			recordAudio.startRecording()
+		}
 
-//   speechRecognizer.onresult = event => {
-//     for(let i=event.resultIndex; i < event.results.length; i++){
-//         var transcript = event.results[i][0].transcript
-//         if(event.results[i].isFinal){
-//             transcript = transcript.trim().toLowerCase()
-//           console.log(transcript)
-//             let utterThis = new SpeechSynthesisUtterance(transcript)
-//             utterThis.voice = voice
-//             speechSynthesis.speak(utterThis)
-//             switch (transcript) {
-//               case "right":
-//                   break
-//               case "left":
-//                   break
-//               case "down":
-//                   break
-//               case "up":
-//                   break
-//               default:
-//             }
-//         }
-//     }
-//   }
-// }
+		navigator.getUserMedia({
+			audio: true
+		}, onStream, function(error) {
+				console.error(JSON.stringify(error));
+		})
+
+		return () => {
+			recordAudio.stop()
+		}
+	}, [])
+}
+
+const MicrophoneButton = () => {
+	const [isRecording, setIsRecording]  = useState(false)
+
+	const text = isRecording ? 'speaking' : 'tap to speak'
+
+	return (
+		<button
+		  className='noselect'
+			onMouseDown={_ => setIsRecording(true)}
+			onTouchStart={_ => setIsRecording(true)}
+			onMouseUp={_ => setIsRecording(false)}
+			onTouchEnd={_ => setIsRecording(false)}
+		>
+			{text}
+		</button>
+	)
+}
+
+
+export { useWebSpeechApi }
+export { useCloudSpeechApi as useSpeech }
+export { MicrophoneButton }
