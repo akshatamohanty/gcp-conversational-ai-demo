@@ -34,7 +34,6 @@ const requestSTT = {
 async function transcribeAudioStream(audio, cb) {
   const recognizeStream = speechClient.streamingRecognize(requestSTT)
   .on('data', function(data){
-    console.log(data);
     cb(data);
   })
   .on('error', (e) => {

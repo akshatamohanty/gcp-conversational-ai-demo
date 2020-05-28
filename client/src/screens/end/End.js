@@ -3,12 +3,10 @@ import './End.css'
 
 const End = ({ name }) => {
   return (
-    <div className="app">
-      <header className="app_header">
-        Bye {name}!
-      </header>
+    <>
+      <h1>Bye {name}!</h1>
       <p>Thanks for playing!</p>
-    </div>
+    </>
   )
 }
 

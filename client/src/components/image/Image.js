@@ -28,14 +28,14 @@ const InputAnswer = ({ answer, onCorrect, onIncorrect, onQuit }) => {
 const Image = (props) => {
   const {
     question,
-    onCorrect,
-    onIncorrect,
-    onQuit,
+    // onCorrect,
+    // onIncorrect,
+    // onQuit,
   } = props
 
   const {
     url,
-    answer,
+    // answer,
     // attribution,
   } = question
 
@@ -44,12 +44,6 @@ const Image = (props) => {
       <div
         className='image_wrapper'
         style={{'backgroundImage': `url(${url})`}}
-      />
-      <InputAnswer
-        answer={answer}
-        onCorrect={onCorrect}
-        onIncorrect={onIncorrect}
-        onQuit={onQuit}
       />
     </>
   )

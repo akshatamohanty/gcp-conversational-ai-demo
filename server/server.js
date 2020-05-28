@@ -32,8 +32,7 @@ const socketIo = io(server).on('connect', (client) => {
 
       // make a detectIntStream call
       transcribeAudioStream(stream, function(results){
-          console.log(results)
-          // client.emit('results', results)
+        client.emit('results', results)
       })
   })
 })

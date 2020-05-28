@@ -8,18 +8,29 @@ import End from './screens/end/End'
 
 // constants
 const STAGE = Object.freeze({
+  START: 'start',
   INTRO: 'intro',
   PLAYING: 'playing',
   END: 'end',
 })
 
-const name = 'Katelyn'
+const name = 'Kay'
 
 function App() {
   const [stage, setStage] = useState(STAGE.INTRO)
 
+  let content
+  if (stage === STAGE.START) {
+    content = (
+      <>
+        <h1>Welcome to our game!</h1>
+        <button onClick={_ => setStage(STAGE.INTRO)}>Enter</button>
+      </>
+    )
+  }
+
   if (stage === STAGE.INTRO) {
-    return <Intro
+    content = <Intro
       name={name}
       onStart={_ => setStage(STAGE.PLAYING)}
       onEnd={_ => setStage(STAGE.END)}
@@ -27,15 +38,16 @@ function App() {
   }
 
   if (stage === STAGE.PLAYING) {
-    return <Game name={name} onEnd={_ => setStage(STAGE.END)}
-    />
+    content = <Game name={name} onEnd={_ => setStage(STAGE.END)} />
   }
 
   if (stage === STAGE.END) {
-    return <End />
+    content = <End />
   }
 
-  return null
+  return (
+    <div className='app'>{content}</div>
+  )
 }
 
 export default App

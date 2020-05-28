@@ -115,7 +115,7 @@ const useWebSpeechApi = (onSpeechResponse) => {
   }, [onSpeechResponse])
 }
 
-const useCloudSpeechApi = () => {
+const useCloudSpeechApi = (onSpeechResponse) => {
 	let socketRef = useRef()
 
 	useEffect(() => {
@@ -124,12 +124,13 @@ const useCloudSpeechApi = () => {
     // when the server found results send
     // it back to the client
     socketRef.current.on('results', function (data) {
-        // show the results on the screen
-        if(data[0] && data[0].results[0] && data[0].results[0].alternatives[0]) {
-          console.log(data[0].results[0].alternatives[0].transcript)
-        }
+			// show the results on the screen
+			if(data.results && data.results[0] && data.results[0].alternatives[0]) {
+				const transcription = data.results[0].alternatives[0].transcript
+				onSpeechResponse(transcription)
+			}
     })
-	}, [])
+	}, [onSpeechResponse])
 
 	useEffect(() => {
 		let recordAudio
@@ -154,7 +155,7 @@ const useCloudSpeechApi = () => {
 				numberOfAudioChannels: 1,
 
 				// continuous streaming
-				timeSlice: 2000,
+				timeSlice: 1000, //1000,
 
 				ondataavailable: function(blob) {
 					// making use of socket.io-stream for bi-directional
@@ -170,7 +171,6 @@ const useCloudSpeechApi = () => {
 
 					// pipe the audio blob to the read stream
 					ss.createBlobReadStream(blob).pipe(stream)
-					console.log('sending stream')
 			}
 			})
 
@@ -184,30 +184,11 @@ const useCloudSpeechApi = () => {
 		})
 
 		return () => {
-			recordAudio.stop()
+			recordAudio.stopRecording()
 		}
 	}, [])
 }
 
-const MicrophoneButton = () => {
-	const [isRecording, setIsRecording]  = useState(false)
-
-	const text = isRecording ? 'speaking' : 'tap to speak'
-
-	return (
-		<button
-		  className='noselect'
-			onMouseDown={_ => setIsRecording(true)}
-			onTouchStart={_ => setIsRecording(true)}
-			onMouseUp={_ => setIsRecording(false)}
-			onTouchEnd={_ => setIsRecording(false)}
-		>
-			{text}
-		</button>
-	)
-}
-
 
 export { useWebSpeechApi }
-export { useCloudSpeechApi as useSpeech }
-export { MicrophoneButton }
+export { useCloudSpeechApi as useSpeech  }

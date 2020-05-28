@@ -1,11 +1,20 @@
 import React from 'react'
 import './Score.css'
 
-const Score = ({ name, score }) => {
+const Score = ({ name, score, highlight }) => {
+  const styles = { fontSize: '24px' }
+
+  if (highlight) {
+    styles.color = 'pink'
+    styles.fontWeight = 'bold'
+  }
+
   return (
-    <div>
-      <div>{name}'s stars</div>
-      <div>{score}</div>
+    <div className='app-header'>
+      <b>{name}'s stars</b>:
+      <span style={styles}>
+        {(Array.from(Array(score))).map(_ => '✰')}
+      </span>
     </div>
   )
 }
