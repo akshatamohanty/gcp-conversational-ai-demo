@@ -1,93 +1,123 @@
+import { useEffect } from 'react'
 
 class SpeechSingleton {
-    constructor() {
-        if (this.speechApiInstance) {
-            return this.speechApiInstance
-        }
+	_speechApiInstance = null
+	_recognizer = null
 
-				if (this.initSpeechApi()) {
-					this.bootstrap()
-				}
-    }
-
-    initSpeechApi() {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
-				if (!SpeechRecognition) {
-					return false
-				}
-
-				const speechRecognizer = new SpeechRecognition()
-        speechRecognizer.continuous = true
-        speechRecognizer.lang = "en-US"
-        speechRecognizer.start()
-
-				this.speechApiInstance = speechRecognizer
-		    return true
-		}
-
-    bootstrap() {
-			const speechRecognizer = this.speechApiInstance
-
-			speechRecognizer.onaudiostart = function(event) {
-				console.log('onaudiostart')
-			}
-
-			speechRecognizer.onaudioend = function(event) {
-					console.log('onaudioend')
-			}
-
-			speechRecognizer.onend = function(event) {
-				console.log('onend')
-				console.log('[DEBUG] speech end')
-				speechRecognizer.start()
-			}
-
-			speechRecognizer.onnomatch = function(event) {
-				console.log('onnomatch')
-			}
-
-			speechRecognizer.onsoundstart = function(event) {
-				console.log('onsoundstart')
-			}
-
-			speechRecognizer.onsoundend = function(event) {
-				console.log('onsoundend')
-			}
-
-			speechRecognizer.onspeechstart = function(event) {
-				console.log('[DEBUG] speech start')
-				console.log('onspeechstart')
-			}
-
-			speechRecognizer.onspeechend = function(event) {
-				console.log('onspeechend')
-				speechRecognizer.stop()
-			}
-
-			speechRecognizer.onerror = function(event){
-				console.log(event)
+	constructor(onSpeechResponse) {
+		if (!this._speechApiInstance) {
+			try {
+				const recognizer = this.makeRecognizer()
+				this._recognizer = recognizer
+				this._speechApiInstance = this
+			} catch(ex) {
+				throw new Error('error initializing speech: ', ex)
 			}
 		}
 
-		onSpeech = function(handleOnSpeech) {
-			const speechRecognizer = this.speechApiInstance
+		this._speechApiInstance.onSpeech(onSpeechResponse)
+	}
 
-			speechRecognizer.onresult = event => {
-				for(let i=event.resultIndex; i < event.results.length; i++){
-					let transcript = event.results[i][0].transcript
+	makeRecognizer() {
+		const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+		if (!SpeechRecognition) {
+			throw new Error('no speech api support')
+		}
 
-					if(event.results[i].isFinal) {
-						transcript = transcript.trim().toLowerCase()
-					}
+		const speechRecognizer = new SpeechRecognition()
+		speechRecognizer.continuous = true
+		speechRecognizer.lang = "en-US"
+		speechRecognizer.start()
 
-					handleOnSpeech(transcript)
+		speechRecognizer.onaudiostart = function(event) {
+			console.log('onaudiostart')
+		}
+
+		speechRecognizer.onaudioend = function(event) {
+				console.log('onaudioend')
+		}
+
+		speechRecognizer.onend = function(event) {
+			console.log('onsoundend, start again')
+			// speechRecognizer.start()
+		}
+
+		speechRecognizer.onnomatch = function(event) {
+			console.log('onnomatch')
+		}
+
+		speechRecognizer.onsoundstart = function(event) {
+			console.log('onsoundstart')
+		}
+
+		speechRecognizer.onsoundend = function(event) {
+			console.log('onsoundend')
+		}
+
+		speechRecognizer.onspeechstart = function(event) {
+			console.log('[DEBUG] speech start')
+			console.log('onspeechstart')
+		}
+
+		speechRecognizer.onspeechend = function(event) {
+			console.log('onspeechend')
+			speechRecognizer.stop()
+		}
+
+		speechRecognizer.onerror = function(event){
+			console.log(event)
+		}
+
+		return speechRecognizer
+	}
+
+	getRecognizer = () => {
+		if (!this._speechApiInstance || !this._recognizer) {
+			throw new Error('no speech instance in bootstrap')
+		}
+
+		return this._speechApiInstance._recognizer
+	}
+
+	onSpeech = (handleOnSpeech) => {
+		const speechRecognizer = this.getRecognizer()
+
+		speechRecognizer.onresult = event => {
+			for(let i=event.resultIndex; i < event.results.length; i++){
+				console.log(event.results)
+				let transcript = event.results[i][0].transcript
+
+				if(event.results[i].isFinal) {
+					transcript = transcript.trim().toLowerCase()
 				}
+
+				handleOnSpeech(transcript)
 			}
 		}
+	}
+
+	reset = () => {
+		// const speechRecognizer = this.getRecognizer()
+
+		// speechRecognizer.onresult(_ => null)
+	}
+}
+
+const useSpeech = (onSpeechResponse) => {
+	useEffect(() => {
+		const speech = new SpeechSingleton(onSpeechResponse)
+		console.log(speech)
+		return () => {
+			console.log('im off')
+			speech.reset()
+		}
+  }, [onSpeechResponse])
 }
 
 
 export default SpeechSingleton
+
+export { useSpeech }
 
 // var voice = undefined;
 // var voices = undefined;

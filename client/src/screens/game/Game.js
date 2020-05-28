@@ -5,6 +5,9 @@ import './Game.css'
 import Score from '../../components/score/Score'
 import Image from '../../components/image/Image'
 
+// helpers
+import { useSpeech } from '../../Voice'
+
 const getQuestions = () => {
   return [
     {
@@ -51,8 +54,19 @@ const Game = ({ name, onEnd, onQuit }) => {
   }, [index, score])
 
   const onIncorrectAnswer = useCallback(() => {
-    // provide encouragement
+    alert('try again!')
   }, [])
+
+  const onSpeech = useCallback((transcript) => {
+    const isCorrect = questions[index].answer.indexOf(transcript) > -1
+    if (isCorrect) {
+      onCorrectAnswer()
+    } else {
+      onIncorrectAnswer()
+    }
+  }, [index, onCorrectAnswer, onIncorrectAnswer, questions])
+
+  useSpeech(onSpeech)
 
   if (!questions || !questions[index]) {
     return null
