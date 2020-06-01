@@ -8,14 +8,8 @@ const Intro = ({ name, onStart, onEnd }) => {
   const [start, setStart] = useState(false)
   const [message, setMessage] = useState(null)
 
-  const handleOnStart = useCallback(() => {
-    const greeting = `Hello ${name}! Would you like to play a game?`
-    speak(greeting)
-    setStart(true)
-  }, [name])
-
   const detectResponse = useCallback((transcript) => {
-    if (!transcript) {
+    if (!transcript || !start) {
       return
     }
 
@@ -36,9 +30,15 @@ const Intro = ({ name, onStart, onEnd }) => {
         onEnd()
       }, 1500)
     }
-  }, [setMessage, name, onStart, onEnd])
+  }, [start, name, onStart, onEnd])
 
   useSpeech(detectResponse)
+
+  const handleOnStart = useCallback(() => {
+    const greeting = `Hello ${name}! Would you like to play a game?`
+    speak(greeting)
+    setStart(true)
+  }, [name])
 
   let content = start ? (
     <>

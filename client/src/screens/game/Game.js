@@ -66,7 +66,7 @@ const Game = ({ name, onEnd, onQuit }) => {
 
   const onCorrectAnswer = useCallback(() => {
     setMessage(`Yes - Well done!`)
-    speak(`Yes! Well done! `)
+    speak(`Yes! Well done!`)
     setScore(score + 1)
 
     setTimeout(_ => {
@@ -76,8 +76,8 @@ const Game = ({ name, onEnd, onQuit }) => {
   }, [index, score])
 
   const onIncorrectAnswer = useCallback((transcript) => {
-    setMessage(`No, it's not ${transcript}! \n\n Try again!`)
-    speak(`No, it's not. Try again!`)
+    setMessage(`No - try again!`)
+    speak(`No - try again!`)
     setTimeout(_ => setMessage(null), 1500)
   }, [])
 

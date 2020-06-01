@@ -5,20 +5,21 @@ import ss from 'socket.io-stream'
 
 class SpeechSingleton {
 	_speechApiInstance = null
-	_recognizer = null
 
 	constructor(onSpeechResponse) {
-		if (!this._speechApiInstance) {
+		if (!SpeechSingleton._speechApiInstance) {
 			try {
 				const recognizer = this.makeRecognizer()
 				this._recognizer = recognizer
-				this._speechApiInstance = this
+				SpeechSingleton._speechApiInstance = this
 			} catch(ex) {
 				throw new Error('error initializing speech: ', ex)
 			}
 		}
 
-		this._speechApiInstance.onSpeech(onSpeechResponse)
+		if (onSpeechResponse) {
+			SpeechSingleton._speechApiInstance.onSpeech(onSpeechResponse)
+		}
 	}
 
 	makeRecognizer() {
@@ -36,30 +37,22 @@ class SpeechSingleton {
 			console.log('onaudiostart')
 		}
 
-		speechRecognizer.onsoundstart = function(event) {
-			if (window.speechSynthesis.speaking) {
-				console.log('[DEBUG] aborting')
-				speechRecognizer.abort()
-				setTimeout(_ => speechRecognizer.start(), 1500)
-			}
-		}
-
-		// speechRecognizer.onspeechend = function(event) {
-		// 	speechRecognizer.stop()
-		// }
-
 		return speechRecognizer
 	}
 
 	getRecognizer = () => {
-		if (!this._speechApiInstance || !this._recognizer) {
+		if (!SpeechSingleton._speechApiInstance) {
 			throw new Error('no speech instance in bootstrap')
 		}
 
-		return this._speechApiInstance._recognizer
+		return this._recognizer
 	}
 
 	onSpeech = (handleOnSpeech) => {
+		if (!handleOnSpeech) {
+			return null
+		}
+
 		const speechRecognizer = this.getRecognizer()
 
 		speechRecognizer.onresult = event => {
@@ -130,16 +123,16 @@ const useCloudSpeechApi = (onSpeechResponse) => {
 				numberOfAudioChannels: 1,
 
 				// continuous streaming
-				timeSlice: 1000, //1000,
+				timeSlice: 5000, //1000,
 
 				ondataavailable: function(blob) {
 					if (window.speechSynthesis.speaking) {
 						return
 					}
+
 					// making use of socket.io-stream for bi-directional
 					// streaming, create a stream
 					const stream = ss.createStream()
-
 					// stream directly to server
 					// it will be temp. stored locally
 					ss(socketRef.current).emit('stream-translate', stream, {
@@ -155,7 +148,7 @@ const useCloudSpeechApi = (onSpeechResponse) => {
 			recordAudio.startRecording()
 		}
 
-		navigator.mediaDevices.getUserMedia({
+		navigator.getUserMedia({
 			audio: true
 		}, onStream, function(error) {
 				console.error(JSON.stringify(error));
@@ -169,11 +162,19 @@ const useCloudSpeechApi = (onSpeechResponse) => {
 
 function speak(utter) {
 	var synth = window.speechSynthesis
-	var utterThis = new SpeechSynthesisUtterance(utter)
-	synth.speak(utterThis)
+	const utterance = new SpeechSynthesisUtterance(utter)
+
+	/// bad bad bad
+	if (SpeechSingleton._speechApiInstance) {
+		const rcg = SpeechSingleton._speechApiInstance.getRecognizer()
+		utterance.onstart = _ => { rcg.abort(); console.log('utterace started') }
+		utterance.onend = _ => { rcg.start(); console.log('utterance ended') }
+	}
+
+	synth.speak(utterance)
 }
 
 
 export { useWebSpeechApi as useSpeech }
-export { speak }
 // export { useCloudSpeechApi as useSpeech  }
+export { speak }
