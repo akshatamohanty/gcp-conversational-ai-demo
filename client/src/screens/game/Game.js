@@ -6,7 +6,7 @@ import Score from '../../components/score/Score'
 import Image from '../../components/image/Image'
 
 // helpers
-import { useSpeech } from '../../Voice'
+import { useSpeech, speak } from '../../Voice'
 
 const getQuestions = () => {
   return [
@@ -66,6 +66,7 @@ const Game = ({ name, onEnd, onQuit }) => {
 
   const onCorrectAnswer = useCallback(() => {
     setMessage(`Yes - Well done!`)
+    speak(`Yes! Well done! `)
     setScore(score + 1)
 
     setTimeout(_ => {
@@ -76,6 +77,7 @@ const Game = ({ name, onEnd, onQuit }) => {
 
   const onIncorrectAnswer = useCallback((transcript) => {
     setMessage(`No, it's not ${transcript}! \n\n Try again!`)
+    speak(`No, it's not. Try again!`)
     setTimeout(_ => setMessage(null), 1500)
   }, [])
 
@@ -92,6 +94,12 @@ const Game = ({ name, onEnd, onQuit }) => {
   }, [index, onCorrectAnswer, onIncorrectAnswer, questions])
 
   useSpeech(onSpeech)
+
+  useEffect(() => {
+    if (questions && questions[index]) {
+      speak(`What is this?`)
+    }
+  }, [index, name, questions])
 
   if (!questions || !questions[index]) {
     return null

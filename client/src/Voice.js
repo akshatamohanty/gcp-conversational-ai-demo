@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import RecordRTC, { StereoAudioRecorder } from 'recordrtc'
 import io from 'socket.io-client'
 import ss from 'socket.io-stream'
@@ -36,40 +36,17 @@ class SpeechSingleton {
 			console.log('onaudiostart')
 		}
 
-		speechRecognizer.onaudioend = function(event) {
-				console.log('onaudioend')
-		}
-
-		speechRecognizer.onend = function(event) {
-			console.log('onsoundend, start again')
-			// speechRecognizer.start()
-		}
-
-		speechRecognizer.onnomatch = function(event) {
-			console.log('onnomatch')
-		}
-
 		speechRecognizer.onsoundstart = function(event) {
-			console.log('onsoundstart')
+			if (window.speechSynthesis.speaking) {
+				console.log('[DEBUG] aborting')
+				speechRecognizer.abort()
+				setTimeout(_ => speechRecognizer.start(), 1500)
+			}
 		}
 
-		speechRecognizer.onsoundend = function(event) {
-			console.log('onsoundend')
-		}
-
-		speechRecognizer.onspeechstart = function(event) {
-			console.log('[DEBUG] speech start')
-			console.log('onspeechstart')
-		}
-
-		speechRecognizer.onspeechend = function(event) {
-			console.log('onspeechend')
-			speechRecognizer.stop()
-		}
-
-		speechRecognizer.onerror = function(event){
-			console.log(event)
-		}
+		// speechRecognizer.onspeechend = function(event) {
+		// 	speechRecognizer.stop()
+		// }
 
 		return speechRecognizer
 	}
@@ -87,7 +64,6 @@ class SpeechSingleton {
 
 		speechRecognizer.onresult = event => {
 			for(let i=event.resultIndex; i < event.results.length; i++){
-				console.log(event.results)
 				let transcript = event.results[i][0].transcript
 
 				if(event.results[i].isFinal) {
@@ -101,7 +77,6 @@ class SpeechSingleton {
 
 	reset = () => {
 		// const speechRecognizer = this.getRecognizer()
-
 		// speechRecognizer.onresult(_ => null)
 	}
 }
@@ -158,6 +133,9 @@ const useCloudSpeechApi = (onSpeechResponse) => {
 				timeSlice: 1000, //1000,
 
 				ondataavailable: function(blob) {
+					if (window.speechSynthesis.speaking) {
+						return
+					}
 					// making use of socket.io-stream for bi-directional
 					// streaming, create a stream
 					const stream = ss.createStream()
@@ -177,7 +155,7 @@ const useCloudSpeechApi = (onSpeechResponse) => {
 			recordAudio.startRecording()
 		}
 
-		navigator.getUserMedia({
+		navigator.mediaDevices.getUserMedia({
 			audio: true
 		}, onStream, function(error) {
 				console.error(JSON.stringify(error));
@@ -189,6 +167,13 @@ const useCloudSpeechApi = (onSpeechResponse) => {
 	}, [])
 }
 
+function speak(utter) {
+	var synth = window.speechSynthesis
+	var utterThis = new SpeechSynthesisUtterance(utter)
+	synth.speak(utterThis)
+}
 
-export { useWebSpeechApi }
-export { useCloudSpeechApi as useSpeech  }
+
+export { useWebSpeechApi as useSpeech }
+export { speak }
+// export { useCloudSpeechApi as useSpeech  }
