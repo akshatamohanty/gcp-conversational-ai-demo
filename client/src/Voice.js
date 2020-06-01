@@ -83,6 +83,8 @@ const useWebSpeechApi = (onSpeechResponse) => {
   }, [onSpeechResponse])
 }
 
+
+let recorderRTC
 const useCloudSpeechApi = (onSpeechResponse) => {
 	let socketRef = useRef()
 
@@ -123,13 +125,9 @@ const useCloudSpeechApi = (onSpeechResponse) => {
 				numberOfAudioChannels: 1,
 
 				// continuous streaming
-				timeSlice: 5000, //1000,
+				timeSlice: 2000,
 
 				ondataavailable: function(blob) {
-					if (window.speechSynthesis.speaking) {
-						return
-					}
-
 					// making use of socket.io-stream for bi-directional
 					// streaming, create a stream
 					const stream = ss.createStream()
@@ -146,6 +144,7 @@ const useCloudSpeechApi = (onSpeechResponse) => {
 			})
 
 			recordAudio.startRecording()
+			recorderRTC = recordAudio
 		}
 
 		navigator.getUserMedia({
@@ -169,6 +168,11 @@ function speak(utter) {
 		const rcg = SpeechSingleton._speechApiInstance.getRecognizer()
 		utterance.onstart = _ => { rcg.abort(); console.log('utterace started') }
 		utterance.onend = _ => { rcg.start(); console.log('utterance ended') }
+	}
+
+	if (recorderRTC) {
+		utterance.onstart = _ => { recorderRTC.pauseRecording(); console.log('utterace started') }
+		utterance.onend = _ => { recorderRTC.resumeRecording(); console.log('utterance ended') }
 	}
 
 	synth.speak(utterance)
