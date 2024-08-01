@@ -5,6 +5,9 @@ import './Game.css'
 import Score from '../../components/score/Score'
 import Image from '../../components/image/Image'
 
+// helpers
+import { useSpeech, speak } from '../../Voice'
+
 const getQuestions = () => {
   return [
     {
@@ -25,10 +28,26 @@ const getQuestions = () => {
   ]
 }
 
+const hasAnswer = (words, answers) => {
+  const hash = []
+  for (const answer of answers) {
+    hash[answer.toLowerCase()] = 1
+  }
+
+  for (const word of words) {
+    if (hash[word.toLowerCase()] !== undefined) {
+      return true
+    }
+  }
+
+  return false
+}
+
 const Game = ({ name, onEnd, onQuit }) => {
   const [questions, setQuestions] = useState()
   const [index, setIndex] = useState(0)
   const [score, setScore] = useState(0)
+  const [message, setMessage] = useState(null)
 
   useEffect(() => {
     const questions = getQuestions()
@@ -46,24 +65,51 @@ const Game = ({ name, onEnd, onQuit }) => {
   }, [index, onEnd, questions])
 
   const onCorrectAnswer = useCallback(() => {
+    setMessage(`Yes - Well done!`)
+    speak(`Yes! Well done!`)
     setScore(score + 1)
-    setIndex(index + 1)
+
+    setTimeout(_ => {
+      setMessage(null)
+      setIndex(index + 1)
+    }, 1500)
   }, [index, score])
 
-  const onIncorrectAnswer = useCallback(() => {
-    // provide encouragement
+  const onIncorrectAnswer = useCallback((transcript) => {
+    setMessage(`No - try again!`)
+    speak(`No - try again!`)
+    setTimeout(_ => setMessage(null), 1500)
   }, [])
+
+  const onSpeech = useCallback((transcript) => {
+    const words = transcript.split(' ')
+    const answers = questions[index].answer
+
+    const isCorrect = hasAnswer(words, answers)
+    if (isCorrect) {
+      onCorrectAnswer()
+    } else {
+      onIncorrectAnswer(transcript)
+    }
+  }, [index, onCorrectAnswer, onIncorrectAnswer, questions])
+
+  useSpeech(onSpeech)
+
+  useEffect(() => {
+    if (questions && questions[index]) {
+      speak(`What is this?`)
+    }
+  }, [index, name, questions])
 
   if (!questions || !questions[index]) {
     return null
   }
 
-  return (
-    <div className="app">
+  const questionContent = (
+    <>
       <header className="app_header">
-        Let's play {name}!
+        <p>What's this, {name}?</p>
       </header>
-      <p>What's this object?</p>
       <Image
         question={questions[index]}
         onCorrect={onCorrectAnswer}
@@ -72,10 +118,18 @@ const Game = ({ name, onEnd, onQuit }) => {
         onQuit={onEnd}
       />
       <br />
+    </>
+  )
+
+  return (
+    <>
+      <Score name={name} score={score} highlight={!!message} />
+      <hr />
+      <br /><br />
+      { message ? <h1>{message}</h1> : questionContent }
       <hr />
       <br />
-      <Score name={name} score={score} />
-    </div>
+    </>
   )
 }
 

@@ -1,14 +1,18 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import './End.css'
 
+import { speak } from '../../Voice'
+
 const End = ({ name }) => {
+  useEffect(() => {
+    speak('Bye!')
+  }, [])
+
   return (
-    <div className="app">
-      <header className="app_header">
-        Bye {name}!
-      </header>
+    <>
+      <h1>Bye {name}!</h1>
       <p>Thanks for playing!</p>
-    </div>
+    </>
   )
 }
 
