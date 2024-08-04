@@ -10,6 +10,8 @@ The game has three functions:
 
 # System Diagram
 
+![alt text](overall-diagram.png)
+
 ## React application
 
 ## `useSpeech`
