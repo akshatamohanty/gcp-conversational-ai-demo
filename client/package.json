@@ -2,6 +2,9 @@
   "name": "cloud-speech-api-demo",
   "description": "Progressive web app demonstrating an implementation of Google's Cloud Speech Api, including handling socket connections.",
   "version": "0.1.0",
+  "engines": {
+    "node": "16.16.0"
+  },
   "dependencies": {
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.5.0",
